@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30907.101
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Oniqys.Wpf.Generator", "Oniqys.Wpf.Generator\Oniqys.Wpf.Generator.csproj", "{23EF3BBB-89EB-41F4-96B0-39160197FD9D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Oniqys.Wpf.Generator.Sample", "Oniqys.Wpf.Generator.Sample\Oniqys.Wpf.Generator.Sample.csproj", "{1CD0DC3D-06B3-4992-8F86-C3661D10755D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{23EF3BBB-89EB-41F4-96B0-39160197FD9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23EF3BBB-89EB-41F4-96B0-39160197FD9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23EF3BBB-89EB-41F4-96B0-39160197FD9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23EF3BBB-89EB-41F4-96B0-39160197FD9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CD0DC3D-06B3-4992-8F86-C3661D10755D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CD0DC3D-06B3-4992-8F86-C3661D10755D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CD0DC3D-06B3-4992-8F86-C3661D10755D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CD0DC3D-06B3-4992-8F86-C3661D10755D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2C0DCB85-6D9D-44F1-90BA-16E09210ACAD}
+	EndGlobalSection
+EndGlobal
