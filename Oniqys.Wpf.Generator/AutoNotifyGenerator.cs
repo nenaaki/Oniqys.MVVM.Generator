@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -27,7 +28,7 @@ namespace Oniqys.Wpf.Generator
         {
             context.AddSource("AutoNotifyAttribute", SourceText.From(attributeText, Encoding.UTF8));
 
-            // retreive the populated receiver 
+            // SyntaxReceiverのみ受け付ける
             if (!(context.SyntaxReceiver is SyntaxReceiver receiver))
                 return;
 
@@ -73,7 +74,7 @@ namespace Oniqys.Wpf.Generator
 
             string namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
 
-            // begin building the generated source
+            // クラスの最初の部分
             StringBuilder source = new StringBuilder($@"
 using System.ComponentModel;
 
@@ -83,13 +84,12 @@ namespace {namespaceName}
     {{
 ");
 
-            // if the class doesn't implement INotifyPropertyChanged already, add it
+            // インターフェースが実装されていない場合、実装する
             if (!classSymbol.Interfaces.Contains(notifySymbol))
             {
                 source.Append("public event PropertyChangedEventHandler PropertyChanged;");
             }
 
-            // create properties for each field 
             foreach (IFieldSymbol fieldSymbol in fields)
             {
                 ProcessField(source, fieldSymbol, attributeSymbol);
@@ -99,13 +99,14 @@ namespace {namespaceName}
             return source.ToString();
         }
 
+        /// <summary>
+        /// フィールドの処理
+        /// </summary>
         private void ProcessField(StringBuilder source, IFieldSymbol fieldSymbol, ISymbol attributeSymbol)
         {
-            // get the name and type of the field
             string fieldName = fieldSymbol.Name;
             ITypeSymbol fieldType = fieldSymbol.Type;
 
-            // get the AutoNotify attribute from the field, and any associated data
             AttributeData attributeData = fieldSymbol.GetAttributes().Single(ad => ad.AttributeClass.Equals(attributeSymbol, SymbolEqualityComparer.Default));
             TypedConstant overridenNameOpt = attributeData.NamedArguments.SingleOrDefault(kvp => kvp.Key == "PropertyName").Value;
 
@@ -116,11 +117,19 @@ namespace {namespaceName}
                 return;
             }
 
-            // ここではGetDocumentationCommentId() としているが、GetDocumentationCommentXml()を用いれば正確なコメントの再現が可能
-            source.Append($@"
+            var xmlDocument = new XmlDocument();
+            xmlDocument.LoadXml(fieldSymbol.GetDocumentationCommentXml());
+
+            // TODO: 最初が summary とは限らないので後で正す
+            var comment = xmlDocument.FirstChild?.InnerText?.Replace("\r\n", "");
+            if(!string.IsNullOrWhiteSpace(comment))
+            {
+                source.Append($@"
 /// <summary>
-/// {fieldSymbol.GetDocumentationCommentId()}
-/// </summary>
+/// {comment}
+/// </summary>");
+            }
+            source.Append($@"
 public {fieldType} {propertyName} 
 {{
     get => this.{fieldName};
