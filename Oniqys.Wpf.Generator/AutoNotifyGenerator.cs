@@ -25,7 +25,6 @@ namespace Oniqys.Wpf.Generator
         /// </summary>
         public void Execute(GeneratorExecutionContext context)
         {
-            // add the attribute text
             context.AddSource("AutoNotifyAttribute", SourceText.From(attributeText, Encoding.UTF8));
 
             // retreive the populated receiver 
@@ -117,7 +116,11 @@ namespace {namespaceName}
                 return;
             }
 
+            // ここではGetDocumentationCommentId() としているが、GetDocumentationCommentXml()を用いれば正確なコメントの再現が可能
             source.Append($@"
+/// <summary>
+/// {fieldSymbol.GetDocumentationCommentId()}
+/// </summary>
 public {fieldType} {propertyName} 
 {{
     get => this.{fieldName};
