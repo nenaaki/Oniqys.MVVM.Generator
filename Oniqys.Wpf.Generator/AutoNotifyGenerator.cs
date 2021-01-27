@@ -12,6 +12,9 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Oniqys.Wpf.Generator
 {
+    /// <summary>
+    /// 通知型プロパティを自動生成します。
+    /// </summary>
     [Generator]
     public partial class AutoNotifyGenerator : ISourceGenerator
     {
@@ -22,33 +25,33 @@ namespace Oniqys.Wpf.Generator
             => context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
 
         /// <summary>
-        /// <see cref="INotiryPropertyChanged"/>を付与し、通知型として動作します。
+        /// <see cref="INotiryPropertyChanged"/>の実装を付与し、通知型として動作します。
         /// </summary>
         public void Execute(GeneratorExecutionContext context)
         {
             context.AddSource("AutoNotifyAttribute", SourceText.From(attributeText, Encoding.UTF8));
 
-            // SyntaxReceiverのみ受け付ける
+            // SyntaxReceiverのみ受け付けます。
             if (!(context.SyntaxReceiver is SyntaxReceiver receiver))
                 return;
 
-            // we're going to create a new compilation that contains the attribute.
-            // TODO: we should allow source generators to provide source during initialize, so that this step isn't required.
+            // 属性を含む新しいシンタックスツリーを作成します。
+            // TODO: この手順が不要になるように、初期化中にソースジェネレータがソースを提供できるようにする必要があります。
             CSharpParseOptions options = (context.Compilation as CSharpCompilation).SyntaxTrees[0].Options as CSharpParseOptions;
             Compilation compilation = context.Compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(SourceText.From(attributeText, Encoding.UTF8), options));
 
-            // get the newly bound attribute, and INotifyPropertyChanged
+            // namespaceを含んだ名称からシンボルを取得します。
             INamedTypeSymbol attributeSymbol = compilation.GetTypeByMetadataName("Oniqys.Wpf.Generator.NotifiablePropertyAttribute");
             INamedTypeSymbol notifySymbol = compilation.GetTypeByMetadataName("System.ComponentModel.INotifyPropertyChanged");
 
-            // loop over the candidate fields, and keep the ones that are actually annotated
+            // 処理対象となるフィールドを収集します。
             List<IFieldSymbol> fieldSymbols = new List<IFieldSymbol>();
             foreach (FieldDeclarationSyntax field in receiver.CandidateFields)
             {
                 SemanticModel model = compilation.GetSemanticModel(field.SyntaxTree);
                 foreach (VariableDeclaratorSyntax variable in field.Declaration.Variables)
                 {
-                    // Get the symbol being decleared by the field, and keep it if its annotated
+                    // 属性が付与されているならそのフィールドのシンボルを保持します。
                     IFieldSymbol fieldSymbol = model.GetDeclaredSymbol(variable) as IFieldSymbol;
                     if (fieldSymbol.GetAttributes().Any(ad => ad.AttributeClass.Equals(attributeSymbol, SymbolEqualityComparer.Default)))
                     {
@@ -57,7 +60,7 @@ namespace Oniqys.Wpf.Generator
                 }
             }
 
-            // group the fields by class, and generate the source
+            // クラス単位で処理します。
             foreach (var group in fieldSymbols.GroupBy(f => f.ContainingType))
             {
                 string classSource = ProcessClass(group.Key, group.ToList(), attributeSymbol, notifySymbol, context);
@@ -113,7 +116,7 @@ namespace {namespaceName}
             string propertyName = chooseName(fieldName, overridenNameOpt);
             if (propertyName.Length == 0 || propertyName == fieldName)
             {
-                //TODO: issue a diagnostic that we can't process this field
+                //TODO: プロパティ名が空か、フィールド名と同名を指定した場合、自動生成できません。
                 return;
             }
 
@@ -122,7 +125,7 @@ namespace {namespaceName}
 
             // TODO: 最初が summary とは限らないので後で正す
             var comment = xmlDocument.FirstChild?.InnerText?.Replace("\r\n", "");
-            if(!string.IsNullOrWhiteSpace(comment))
+            if (!string.IsNullOrWhiteSpace(comment))
             {
                 source.Append($@"
 /// <summary>
@@ -162,18 +165,17 @@ public {fieldType} {propertyName}
         }
 
         /// <summary>
-        /// Created on demand before each generation pass
+        /// 生成パスの前にオンデマンドでシンタックスを受け取るクラス
         /// </summary>
         class SyntaxReceiver : ISyntaxReceiver
         {
             public List<FieldDeclarationSyntax> CandidateFields { get; } = new List<FieldDeclarationSyntax>();
 
             /// <summary>
-            /// Called for every syntax node in the compilation, we can inspect the nodes and save any information useful for generation
+            /// シンタックスノードのうち属性を持つフィールドのみを収集します。
             /// </summary>
             public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
             {
-                // any field with at least one attribute is a candidate for property generation
                 if (syntaxNode is FieldDeclarationSyntax fieldDeclarationSyntax
                     && fieldDeclarationSyntax.AttributeLists.Count > 0)
                 {
