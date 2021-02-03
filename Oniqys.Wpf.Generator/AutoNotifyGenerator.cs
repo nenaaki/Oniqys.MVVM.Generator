@@ -121,17 +121,24 @@ namespace {namespaceName}
             }
 
             var xmlDocument = new XmlDocument();
-            xmlDocument.LoadXml(fieldSymbol.GetDocumentationCommentXml());
-
-            // TODO: 最初が summary とは限らないので後で正す
-            var comment = xmlDocument.FirstChild?.InnerText?.Replace("\r\n", "");
-            if (!string.IsNullOrWhiteSpace(comment))
+            var xmlComment = fieldSymbol.GetDocumentationCommentXml();
+            if (!string.IsNullOrEmpty(xmlComment))
             {
-                source.Append($@"
+                xmlDocument.LoadXml(xmlComment);
+                var summaryNode = xmlDocument.SelectSingleNode("member/summary");
+                if (summaryNode != null)
+                {
+                    var summary = summaryNode?.InnerText?.Replace("\r\n", "");
+                    if (!string.IsNullOrWhiteSpace(summary))
+                    {
+                        source.Append($@"
 /// <summary>
-/// {comment}
+/// {summary}
 /// </summary>");
+                    }
+                }
             }
+
             source.Append($@"
 public {fieldType} {propertyName} 
 {{
