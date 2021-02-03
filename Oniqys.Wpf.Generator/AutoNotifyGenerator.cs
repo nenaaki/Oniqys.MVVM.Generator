@@ -120,22 +120,20 @@ namespace {namespaceName}
                 return;
             }
 
+            // サマリーを抽出します。
             var xmlDocument = new XmlDocument();
             var xmlComment = fieldSymbol.GetDocumentationCommentXml();
             if (!string.IsNullOrEmpty(xmlComment))
             {
                 xmlDocument.LoadXml(xmlComment);
                 var summaryNode = xmlDocument.SelectSingleNode("member/summary");
-                if (summaryNode != null)
+                var summary = summaryNode?.InnerText?.Replace("\r\n", "");
+                if (!string.IsNullOrWhiteSpace(summary))
                 {
-                    var summary = summaryNode?.InnerText?.Replace("\r\n", "");
-                    if (!string.IsNullOrWhiteSpace(summary))
-                    {
-                        source.Append($@"
+                    source.Append($@"
 /// <summary>
 /// {summary}
 /// </summary>");
-                    }
                 }
             }
 
